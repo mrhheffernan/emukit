@@ -83,6 +83,19 @@ class GPyModelWrapper(IModel, IDifferentiable, IJointlyDifferentiable, ICalculat
         covariance = self.model.posterior_covariance_between_points(x_train_new, x_test)
         variance_prediction = self.model.predict(x_train_new)[1]
         return covariance**2 / variance_prediction
+        
+    def calculate_exponentiated_variance_reduction(self, x_train_new: np.ndarray, x_test: np.ndarray) -> np.ndarray:
+        """
+        Computes the variance reduction at x_test, if a new point at x_train_new is acquired
+        """
+        covariance = self.model.posterior_covariance_between_points(x_train_new, x_test)
+        model_prediction = self.model.predict(x_train_new)
+        variance_prediction = model_prediction[1]
+        exponentiated_variance_prediction = np.sqrt((np.exp(model_prediction[0])*variance_prediction)**2)
+        
+        ## Warning: This is almost certainly incorrect, you need to exponentiate the covariance matrix as well.
+        
+        return covariance**2 / exponentiated_variance_prediction
 
     def predict_covariance(self, X: np.ndarray, with_noise: bool=True) -> np.ndarray:
         """

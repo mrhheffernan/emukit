@@ -57,7 +57,7 @@ class IntegratedExponentiatedVarianceReduction(Acquisition):
         for i in range(n_eval_points):
             # Find variance reduction at each Monte Carlo point
             ## This is where we need to look at the exponentiation.
-            variance_reduction = self.model.calculate_variance_reduction(x[[i], :], self._x_monte_carlo)
+            variance_reduction = self.model.calculate_exponentiated_variance_reduction(x[[i], :], self._x_monte_carlo)
             # Take mean to approximate integral per unit volume
             integrated_variance[i] = np.mean(variance_reduction)
 
