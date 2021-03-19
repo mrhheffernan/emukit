@@ -91,7 +91,15 @@ class GreedyBatchPointCalculator(CandidatePointCalculator):
         new_xs_array = np.array([])
 
         while new_xs_array.shape[0] != self.batch_size:
-            for _ in range(self.batch_size):
+
+            if new_xs_array.shape[0]!= 0: # if not the first run, consider the last points in the search
+
+                # Add new point as fake observation in model
+                allunique_x = np.concatenate([self.model.X, new_xs_array], axis=0)
+                allunique_y = np.concatenate([self.model.Y, new_y_array], axis=0)
+                self.model.set_data(allunique_x, allunique_y)
+
+            for _ in range(self.batch_size - new_xs_array.shape[0]):
                 new_x, _ = self.acquisition_optimizer.optimize(self.acquisition, context)
                 new_xs.append(new_x)
                 new_y = self.model.predict(new_x)[0]
@@ -103,8 +111,16 @@ class GreedyBatchPointCalculator(CandidatePointCalculator):
 
             # Reset data
             self.model.set_data(*original_data)
-            new_xs_array = np.concatenate(new_xs, axis=0)
-            new_xs_array = np.unique(new_xs_array, axis=0)
+
+            if new_xs_array.shape[0]!= 0:
+                new_xs_array = np.concatenate((new_xs_array,new_xs), axis=0)
+                new_xs_array = np.unique(new_xs_array, axis=0)
+
+                new_y_array = np.concatenate(new_y,axis=0)
+                new_y_array = np.unique(new_y_array, axis=0)
+            else:
+                new_xs_array = np.concatenate(new_xs, axis=0)
+
         return new_xs_array
 
 
