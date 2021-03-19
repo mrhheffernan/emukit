@@ -92,8 +92,9 @@ class GPyModelWrapper(IModel, IDifferentiable, IJointlyDifferentiable, ICalculat
         model_prediction = self.model.predict(x_train_new)
         variance_prediction = model_prediction[1]
         mean_prediction = model_prediction[0]
-        #exponentiated_variance_prediction = np.sqrt((np.exp(model_prediction[0])*variance_prediction)**2) # true in the uncorrelated limit, which we can't really apply here
-        exponentiated_variance_prediction = np.exp(2*mean_prediction + variance_prediction**2)*(np.exp(variance_prediction**2)-1) # EV utility function, eq.5  of Kandasamy 2017
+        exponentiated_variance_prediction = (np.exp(model_prediction[0])*variance_prediction)**2 # true in the uncorrelated limit, which we can't really apply here. However, the Kandasamy
+        # formula blows up the error making the method basically useless.
+        #exponentiated_variance_prediction = np.exp(2*mean_prediction + variance_prediction**2)*(np.exp(variance_prediction**2)-1) # EV utility function, eq.5  of Kandasamy 2017
         ## Warning: This is almost certainly incorrect, you need to exponentiate the covariance matrix as well.
 
         return covariance**2 / exponentiated_variance_prediction # divide points covariance by expected variance

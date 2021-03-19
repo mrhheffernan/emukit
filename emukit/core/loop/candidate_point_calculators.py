@@ -84,19 +84,28 @@ class GreedyBatchPointCalculator(CandidatePointCalculator):
         self.acquisition.update_parameters()
         new_xs = []
         original_data = (self.model.X, self.model.Y)
-        for _ in range(self.batch_size):
-            new_x, _ = self.acquisition_optimizer.optimize(self.acquisition, context)
-            new_xs.append(new_x)
-            new_y = self.model.predict(new_x)[0]
 
-            # Add new point as fake observation in model
-            all_x = np.concatenate([self.model.X, new_x], axis=0)
-            all_y = np.concatenate([self.model.Y, new_y], axis=0)
-            self.model.set_data(all_x, all_y)
+        # we want to ensure that points that aren't already in the training set get called.
+        # This is really only a danger in the exponentiated method
 
-        # Reset data
-        self.model.set_data(*original_data)
-        return np.concatenate(new_xs, axis=0)
+        new_xs_array = np.array([])
+
+        while new_xs_array.shape[0] != self.batch_size:
+            for _ in range(self.batch_size):
+                new_x, _ = self.acquisition_optimizer.optimize(self.acquisition, context)
+                new_xs.append(new_x)
+                new_y = self.model.predict(new_x)[0]
+
+                # Add new point as fake observation in model
+                all_x = np.concatenate([self.model.X, new_x], axis=0)
+                all_y = np.concatenate([self.model.Y, new_y], axis=0)
+                self.model.set_data(all_x, all_y)
+
+            # Reset data
+            self.model.set_data(*original_data)
+            new_xs_array = np.concatenate(new_xs, axis=0)
+            new_xs_array = np.unique(new_xs_array, axis=0)
+        return new_xs_array
 
 
 class RandomSampling(CandidatePointCalculator):
