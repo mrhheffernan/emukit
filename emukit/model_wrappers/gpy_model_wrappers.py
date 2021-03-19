@@ -83,7 +83,7 @@ class GPyModelWrapper(IModel, IDifferentiable, IJointlyDifferentiable, ICalculat
         covariance = self.model.posterior_covariance_between_points(x_train_new, x_test)
         variance_prediction = self.model.predict(x_train_new)[1]
         return covariance**2 / variance_prediction
-        
+
     def calculate_exponentiated_variance_reduction(self, x_train_new: np.ndarray, x_test: np.ndarray) -> np.ndarray:
         """
         Computes the variance reduction at x_test, if a new point at x_train_new is acquired
@@ -91,11 +91,12 @@ class GPyModelWrapper(IModel, IDifferentiable, IJointlyDifferentiable, ICalculat
         covariance = self.model.posterior_covariance_between_points(x_train_new, x_test)
         model_prediction = self.model.predict(x_train_new)
         variance_prediction = model_prediction[1]
-        exponentiated_variance_prediction = np.sqrt((np.exp(model_prediction[0])*variance_prediction)**2)
-        
+        mean_prediction = model_prediction[0]
+        #exponentiated_variance_prediction = np.sqrt((np.exp(model_prediction[0])*variance_prediction)**2) # true in the uncorrelated limit, which we can't really apply here
+        exponentiated_variance_prediction = np.exp(2*mean_prediction + variance_prediction**2)*(np.exp(variance_prediction**2)-1) # EV utility function, eq.5  of Kandasamy 2017
         ## Warning: This is almost certainly incorrect, you need to exponentiate the covariance matrix as well.
-        
-        return covariance**2 / exponentiated_variance_prediction
+
+        return covariance**2 / exponentiated_variance_prediction # divide points covariance by expected variance
 
     def predict_covariance(self, X: np.ndarray, with_noise: bool=True) -> np.ndarray:
         """
@@ -152,7 +153,7 @@ class GPyModelWrapper(IModel, IDifferentiable, IJointlyDifferentiable, ICalculat
         # initialization for HMC
         unfixed_params = [param for param in self.model.flattened_parameters if not param.is_fixed]
         for param in unfixed_params:
-            # Add jitter by multiplying with log-normal noise with mean 1 and standard deviation 0.01 
+            # Add jitter by multiplying with log-normal noise with mean 1 and standard deviation 0.01
             # This ensures the sign of the parameter remains the same
             param *= np.random.lognormal(np.log(1. / np.sqrt(1.0001)), np.sqrt(np.log(1.0001)), size=param.size)
         hmc = GPy.inference.mcmc.HMC(self.model, stepsize=step_size)

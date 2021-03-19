@@ -3,3 +3,4 @@
 
 
 from .models import ICalculateVarianceReduction  # noqa: F401
+from .models import IECalculateVarianceReduction
