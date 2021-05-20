@@ -62,6 +62,7 @@ class AcquisitionOptimizerBase(abc.ABC):
         else:
             self._validate_context_parameters(context)
         context_manager = ContextManager(self.space, context)
+
         max_x, max_value = self._optimize(acquisition, context_manager)
 
         # Optimization might not match any encoding exactly

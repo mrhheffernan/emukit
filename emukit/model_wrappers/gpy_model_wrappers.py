@@ -92,12 +92,21 @@ class GPyModelWrapper(IModel, IDifferentiable, IJointlyDifferentiable, ICalculat
         model_prediction = self.model.predict(x_train_new)
         variance_prediction = model_prediction[1]
         mean_prediction = model_prediction[0]
-        exponentiated_variance_prediction = (np.exp(model_prediction[0])*variance_prediction)**2 # true in the uncorrelated limit, which we can't really apply here. However, the Kandasamy
+        exponentiated_variance_prediction = np.sqrt((np.exp(model_prediction[0])*variance_prediction)**2) # true in the uncorrelated limit, which we can't really apply here. However, the Kandasamy
         # formula blows up the error making the method basically useless.
         #exponentiated_variance_prediction = np.exp(2*mean_prediction + variance_prediction**2)*(np.exp(variance_prediction**2)-1) # EV utility function, eq.5  of Kandasamy 2017
         ## Warning: This is almost certainly incorrect, you need to exponentiate the covariance matrix as well.
 
-        return covariance**2 / exponentiated_variance_prediction # divide points covariance by expected variance
+        return covariance**2 * exponentiated_variance_prediction # divide points covariance by expected variance
+
+        #return np.exp(covariance**2 / variance_prediction)
+        #return float(np.exp(mean_prediction))*(covariance**2 / exponentiated_variance_prediction) # screw it, the variance prediction is small at edges so let's change this appropriately
+        #return float(np.exp(mean_prediction))*covariance # what the hell, let's just assume that the variance is proportional to the mean and see where this takes us
+        # this now SHOULD suggest that the variance is maximally reduced at more interesting points.
+        # dividing or multiplying naively doesn't produce too different a selection of points.
+        # multiplying may be slightly worse, but that's it.
+        # there needs to be a way to penalize corners, that's where these points keep getting chosen and we want to investigate the body more.
+        # Just going to weight the points by the mean predictions and we'll see how badly this goes.
 
     def predict_covariance(self, X: np.ndarray, with_noise: bool=True) -> np.ndarray:
         """

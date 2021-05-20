@@ -3,5 +3,6 @@
 
 
 from .model_variance import ModelVariance  # noqa: F401
+from .model_expvariance import ModelExpVariance  # noqa: F401
 from .integrated_variance import IntegratedVarianceReduction  # noqa: F401
 from .integrated_exponentiated_variance import IntegratedExponentiatedVarianceReduction  # noqa: F401

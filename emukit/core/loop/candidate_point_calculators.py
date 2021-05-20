@@ -87,14 +87,14 @@ class GreedyBatchPointCalculator(CandidatePointCalculator):
 
         # we want to ensure that points that aren't already in the training set get called.
         # This is really only a danger in the exponentiated method
+        # Can extend this to check if the other points are already in the whole set or not
 
         new_xs_array = np.array([])
 
         while new_xs_array.shape[0] != self.batch_size:
 
-            if new_xs_array.shape[0]!= 0: # if not the first run, consider the last points in the search
-
-                # Add new point as fake observation in model
+            if new_xs_array.shape[0]!= 0:
+                # if not the first search iteration, consider the last points in the search as fake model observations
                 allunique_x = np.concatenate([self.model.X, new_xs_array], axis=0)
                 allunique_y = np.concatenate([self.model.Y, new_y_array], axis=0)
                 self.model.set_data(allunique_x, allunique_y)
